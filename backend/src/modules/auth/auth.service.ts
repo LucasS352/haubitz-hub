@@ -23,8 +23,8 @@ const USER_SELECT = {
 } as const;
 
 const generateTokens = (userId: string) => {
-  const accessToken = jwt.sign({ userId }, env.JWT_SECRET, {
-    expiresIn: env.JWT_EXPIRES_IN,
+  const accessToken = jwt.sign({ userId }, env.JWT_SECRET as string, {
+    expiresIn: env.JWT_EXPIRES_IN as any,
   });
   const refreshToken = uuidv4(); // UUID simples como refresh token
   return { accessToken, refreshToken };
@@ -95,8 +95,8 @@ export const authService = {
       throw new UnauthorizedError('Usuário inativo');
     }
 
-    const newAccessToken = jwt.sign({ userId: tokenRecord.user.id }, env.JWT_SECRET, {
-      expiresIn: env.JWT_EXPIRES_IN,
+    const newAccessToken = jwt.sign({ userId: tokenRecord.user.id }, env.JWT_SECRET as string, {
+      expiresIn: env.JWT_EXPIRES_IN as any,
     });
 
     return { accessToken: newAccessToken };

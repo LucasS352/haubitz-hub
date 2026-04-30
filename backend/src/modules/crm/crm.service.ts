@@ -358,11 +358,11 @@ export const crmService = {
   // ========== DASHBOARD ==========
 
   async getDashboard(callerCompanyId: string | null, isSuperAdmin: boolean, filterCompanyId?: string) {
-    const companyFilter = isSuperAdmin
+    const companyFilter: any = isSuperAdmin
       ? filterCompanyId
         ? { companyId: filterCompanyId }
         : {}
-      : { companyId: callerCompanyId };
+      : { companyId: callerCompanyId as string };
 
     const [
       totalLeads,
@@ -381,8 +381,9 @@ export const crmService = {
       prisma.lead.groupBy({
         by: ['pipelineStage'],
         where: companyFilter,
-        _count: { pipelineStage: true },
-      }),
+        _count: { _all: true },
+        orderBy: { pipelineStage: 'asc' },
+      } as any),
       // Últimos 5 leads
       prisma.lead.findMany({
         where: companyFilter,
@@ -411,9 +412,9 @@ export const crmService = {
         conversionRate: `${conversionRate}%`,
         pendingFollowUps,
       },
-      pipeline: pipelineStats.map((s) => ({
+      pipeline: pipelineStats.map((s: any) => ({
         stage: s.pipelineStage,
-        count: s._count.pipelineStage,
+        count: s._count?._all || s._count?.pipelineStage || 0,
       })),
       recentLeads,
     };
