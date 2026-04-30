@@ -1,0 +1,322 @@
+// Este gerador cria o Prisma Client tipado
+generator client {
+  provider = "prisma-client-js"
+}
+
+// MariaDB usa o provider "mysql"
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// =============================================
+// ENUMS
+// =============================================
+
+enum UserRole {
+  SUPERADMIN
+  ADMIN
+  SDR
+  CLOSER
+  COLLABORATOR
+}
+
+enum CompanyStatus {
+  ACTIVE
+  INACTIVE
+  PAUSED
+}
+
+enum OnboardingStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  PAUSED
+}
+
+enum StepStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  SKIPPED
+}
+
+enum PipelineStage {
+  LEAD_IN
+  QUALIFICATION
+  SCHEDULING
+  DIAGNOSIS
+  PROPOSAL
+  NEGOTIATION
+  FOLLOW_UP
+  CLOSED_WON
+  CLOSED_LOST
+}
+
+enum InteractionType {
+  CALL
+  EMAIL
+  WHATSAPP
+  MEETING
+  NOTE
+}
+
+enum FollowUpStatus {
+  PENDING
+  COMPLETED
+  MISSED
+}
+
+// =============================================
+// USUÁRIOS E PERMISSÕES
+// =============================================
+
+model User {
+  id           String    @id @default(uuid())
+  name         String
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  role         UserRole  @default(COLLABORATOR)
+  // null = SuperAdmin (acesso a todas as empresas)
+  companyId    String?   @map("company_id")
+  isActive     Boolean   @default(true) @map("is_active")
+  lastLoginAt  DateTime? @map("last_login_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  // Relações
+  company           Company?           @relation("CompanyUsers", fields: [companyId], references: [id])
+  createdCompanies  Company[]          @relation("CreatedByUser")
+  permissions       UserPermission[]
+  refreshTokens     RefreshToken[]
+  assignedSDR       Lead[]             @relation("SDRLeads")
+  assignedCloser    Lead[]             @relation("CloserLeads")
+  interactions      CrmInteraction[]
+  followUps         FollowUp[]
+  onboardingLogs    OnboardingStepLog[]
+
+  @@map("users")
+}
+
+// Permissões granulares que Kayke atribui a cada usuário
+model Permission {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  description String?
+  module      String  // "crm", "onboarding", "companies", "users", "reports"
+  action      String  // "read", "write", "delete", "manage"
+
+  userPermissions UserPermission[]
+
+  @@map("permissions")
+}
+
+model UserPermission {
+  userId       String @map("user_id")
+  permissionId String @map("permission_id")
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([userId, permissionId])
+  @@map("user_permissions")
+}
+
+// Tokens de refresh - permite invalidar sessões específicas
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  token     String   @unique @db.VarChar(512)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+// =============================================
+// EMPRESAS (TENANTS)
+// =============================================
+
+model Company {
+  id          String        @id @default(uuid())
+  name        String
+  cnpj        String?       @unique
+  email       String?
+  phone       String?
+  website     String?
+  segment     String?       // Ex: "E-commerce", "Restaurante", "Clínica"
+  status      CompanyStatus @default(ACTIVE)
+  notes       String?       @db.Text
+  avatar      String?       // URL da logo/avatar
+  // Plano contratado
+  plan        String?       // "Básico", "Premium", "Enterprise"
+  contractStart DateTime?   @map("contract_start")
+  contractEnd   DateTime?   @map("contract_end")
+  createdById String        @map("created_by")
+
+  // ── Portal do Cliente ──────────────────────────────────────────────
+  // Token único gerado pela Haubitz para acesso ao portal
+  clientPortalToken String?   @unique @map("client_portal_token")
+
+  // Métricas financeiras preenchidas manualmente pela Haubitz
+  investimento       Decimal?  @map("investimento") @db.Decimal(14, 2)
+  faturamento        Decimal?  @map("faturamento")  @db.Decimal(14, 2)
+  roi                Float?    @map("roi") // ex: 25.0 = 25x
+
+  // Orçamento de tráfego pago definido pelo cliente (mínimo R$ 7)
+  trafegoPagoOrcamento Decimal? @map("trafego_pago_orcamento") @db.Decimal(14, 2)
+
+  // Redes sociais do cliente (usadas no tráfego pago)
+  instagramUrl String? @map("instagram_url")
+  facebookUrl  String? @map("facebook_url")
+  tiktokUrl    String? @map("tiktok_url")
+
+  // Informações de contrato e pagamento (texto livre — preenchido pela Haubitz)
+  contratoInfo   String? @map("contrato_info")   @db.Text
+  pagamentosInfo String? @map("pagamentos_info") @db.Text
+
+  // Token da API Meta do cliente (salvo pelo próprio cliente no portal)
+  metaAccessToken String? @map("meta_access_token") @db.Text
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  createdBy  User         @relation("CreatedByUser", fields: [createdById], references: [id])
+  users      User[]       @relation("CompanyUsers")
+  onboarding Onboarding?
+  leads      Lead[]
+
+  @@map("companies")
+}
+
+// =============================================
+// ONBOARDING - 7 ETAPAS
+// =============================================
+
+model Onboarding {
+  id            String           @id @default(uuid())
+  companyId     String           @unique @map("company_id")
+  status        OnboardingStatus @default(NOT_STARTED)
+  startedAt     DateTime?        @map("started_at")
+  completedAt   DateTime?        @map("completed_at")
+  responsibleId String?          @map("responsible_id") // Usuário responsável pelo onboarding
+  notes         String?          @db.Text
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+
+  company Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  steps   OnboardingStep[]
+
+  @@map("onboardings")
+}
+
+model OnboardingStep {
+  id           String     @id @default(uuid())
+  onboardingId String     @map("onboarding_id")
+  stepNumber   Int        @map("step_number") // 1 a 7
+  title        String
+  description  String?    @db.Text
+  status       StepStatus @default(PENDING)
+  dueDate      DateTime?  @map("due_date")
+  startedAt    DateTime?  @map("started_at")
+  completedAt  DateTime?  @map("completed_at")
+  notes        String?    @db.Text
+  // Checklist serializado como JSON
+  checklist    Json?      // Array de { item: string, done: boolean }
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  onboarding Onboarding          @relation(fields: [onboardingId], references: [id], onDelete: Cascade)
+  logs       OnboardingStepLog[]
+
+  @@unique([onboardingId, stepNumber])
+  @@map("onboarding_steps")
+}
+
+model OnboardingStepLog {
+  id          String   @id @default(uuid())
+  stepId      String   @map("step_id")
+  action      String   // Ex: "Status alterado para IN_PROGRESS", "Checklist atualizado"
+  oldStatus   String?  @map("old_status")
+  newStatus   String?  @map("new_status")
+  notes       String?  @db.Text
+  performedBy String   @map("performed_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  step      OnboardingStep @relation(fields: [stepId], references: [id], onDelete: Cascade)
+  user      User           @relation(fields: [performedBy], references: [id])
+
+  @@map("onboarding_step_logs")
+}
+
+// =============================================
+// CRM - LEADS E PIPELINE
+// =============================================
+
+model Lead {
+  id            String        @id @default(uuid())
+  companyId     String        @map("company_id") // Tenant que gerou o lead
+  name          String
+  email         String?
+  phone         String?
+  businessName  String?       @map("business_name") // Empresa do lead
+  segment       String?
+  source        String?       // "Instagram", "Indicação", "Google Ads", etc.
+  status        String        @default("ACTIVE") // ACTIVE, INACTIVE
+  pipelineStage PipelineStage @default(LEAD_IN) @map("pipeline_stage")
+  sdrId         String?       @map("sdr_id")
+  closerId      String?       @map("closer_id")
+  proposalValue Decimal?      @map("proposal_value") @db.Decimal(10, 2)
+  lostReason    String?       @map("lost_reason") @db.Text
+  closedAt      DateTime?     @map("closed_at")
+  nextContactAt DateTime?     @map("next_contact_at")
+  notes         String?       @db.Text
+  tags          String?       @db.Text // JSON array de tags
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  company      Company          @relation(fields: [companyId], references: [id])
+  sdr          User?            @relation("SDRLeads", fields: [sdrId], references: [id])
+  closer       User?            @relation("CloserLeads", fields: [closerId], references: [id])
+  interactions CrmInteraction[]
+  followUps    FollowUp[]
+
+  @@map("leads")
+}
+
+model CrmInteraction {
+  id          String          @id @default(uuid())
+  leadId      String          @map("lead_id")
+  type        InteractionType
+  notes       String          @db.Text
+  performedBy String          @map("performed_by")
+  // Stage em que a interação aconteceu (para auditoria)
+  stage       PipelineStage?
+  duration    Int?            // duração em minutos (para calls)
+  createdAt   DateTime        @default(now()) @map("created_at")
+
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [performedBy], references: [id])
+
+  @@map("crm_interactions")
+}
+
+model FollowUp {
+  id          String         @id @default(uuid())
+  leadId      String         @map("lead_id")
+  scheduledAt DateTime       @map("scheduled_at")
+  notes       String?        @db.Text
+  status      FollowUpStatus @default(PENDING)
+  attempt     Int            @default(1) // Tentativa 1 a 5
+  createdBy   String         @map("created_by")
+  completedAt DateTime?      @map("completed_at")
+  result      String?        @db.Text // O que aconteceu no follow-up
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [createdBy], references: [id])
+
+  @@map("follow_ups")
+}

@@ -1,0 +1,75 @@
+# =============================================
+# HAUBITZ BACKEND - Docker Compose
+# Para deploy via Portainer (igual ao 7bar)
+# =============================================
+
+version: '3.8'
+
+services:
+  # ----------------------------------------
+  # BANCO DE DADOS MariaDB
+  # ----------------------------------------
+  db:
+    image: mariadb:10.11
+    container_name: haubitz_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: haubitz
+      MYSQL_USER: haubitz_user
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - haubitz_db_data:/var/lib/mysql
+    ports:
+      - "3307:3306"  # Mapeia 3307 no host (igual ao XAMPP local)
+    networks:
+      - haubitz_network
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ----------------------------------------
+  # BACKEND Node.js
+  # ----------------------------------------
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: haubitz_backend
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: mysql://haubitz_user:${DB_PASSWORD}@db:3306/haubitz
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      JWT_EXPIRES_IN: 15m
+      JWT_REFRESH_EXPIRES_IN: 7d
+      BCRYPT_ROUNDS: 12
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      ADMIN_NAME: ${ADMIN_NAME}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - haubitz_network
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  haubitz_db_data:
+    driver: local
+
+networks:
+  haubitz_network:
+    driver: bridge
