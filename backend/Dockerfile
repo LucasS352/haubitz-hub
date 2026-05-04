@@ -5,6 +5,9 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Instala OpenSSL necessário para o Prisma
+RUN apk add --no-cache openssl
+
 # Copia apenas os arquivos de dependências primeiro (cache otimizado)
 COPY package*.json ./
 COPY prisma ./prisma/
@@ -28,17 +31,23 @@ FROM node:20-alpine AS production
 
 WORKDIR /app
 
+# Instala OpenSSL necessário para o Prisma
+RUN apk add --no-cache openssl
+
 # Instala apenas dependências de produção
 COPY package*.json ./
 COPY prisma ./prisma/
 RUN npm install --only=production
 
-# Copia o build compilado
+# Copia o build compilado e o Prisma Client gerado no builder
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma/engines ./node_modules/@prisma/engines
 
-# Usuário não-root para segurança
-RUN addgroup -S haubitz && adduser -S haubitz -G haubitz
+# Cria usuário não-root e ajusta permissões
+RUN addgroup -S haubitz && adduser -S haubitz -G haubitz \
+    && chown -R haubitz:haubitz /app
+
 USER haubitz
 
 # Porta da aplicação
