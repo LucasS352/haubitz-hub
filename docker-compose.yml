@@ -12,19 +12,19 @@ services:
     container_name: haubitz_db
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_ROOT_PASSWORD: HaubitzRoot2024
       MYSQL_DATABASE: haubitz
       MYSQL_USER: haubitz_user
-      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_PASSWORD: HaubitzDB2024
     volumes:
       - haubitz_db_data:/var/lib/mysql
     networks:
       - haubitz_network
     healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pHaubitzRoot2024"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
       start_period: 30s
 
   # ----------------------------------------
@@ -38,18 +38,18 @@ services:
     container_name: haubitz_backend
     restart: unless-stopped
     ports:
-      - "3540:3000"  # Exposto na 3540 conforme solicitado
+      - "3540:3000"
     environment:
       NODE_ENV: production
-      DATABASE_URL: mysql://haubitz_user:${DB_PASSWORD}@db:3306/haubitz
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      DATABASE_URL: mysql://haubitz_user:HaubitzDB2024@db:3306/haubitz
+      JWT_SECRET: haubitz-jwt-secret-2024-change-this-in-prod
+      JWT_REFRESH_SECRET: haubitz-refresh-secret-2024-change-this-in-prod
       JWT_EXPIRES_IN: 15m
       JWT_REFRESH_EXPIRES_IN: 7d
       BCRYPT_ROUNDS: 12
-      ADMIN_EMAIL: ${ADMIN_EMAIL}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
-      ADMIN_NAME: ${ADMIN_NAME}
+      ADMIN_EMAIL: kayke@haubitz.com.br
+      ADMIN_PASSWORD: Haubitz@2024!
+      ADMIN_NAME: Kayke
     depends_on:
       db:
         condition: service_healthy
@@ -72,7 +72,7 @@ services:
     container_name: haubitz_hub
     restart: unless-stopped
     ports:
-      - "3541:80"  # Exposto na 3541 conforme solicitado
+      - "3541:80"
     depends_on:
       - backend
     networks:
@@ -88,7 +88,7 @@ services:
     container_name: haubitz_portal
     restart: unless-stopped
     ports:
-      - "3542:80"  # Exposto na 3542 conforme solicitado
+      - "3542:80"
     depends_on:
       - backend
     networks:
