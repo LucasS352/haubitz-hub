@@ -8,7 +8,7 @@ WORKDIR /app
 # Copia pacotes para cache
 COPY package*.json ./
 # O vite_react_shadcn usa npm no package.json, vamos instalar com npm
-RUN npm ci
+RUN npm install
 
 # Copia o código e compila
 COPY . .
