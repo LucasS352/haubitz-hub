@@ -57,5 +57,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD wget -qO- http://localhost:3000/health || exit 1
 
-# Roda as migrações e inicia o servidor
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]
+# Roda migrations → seed (cria admin se não existir) → inicia servidor
+CMD ["sh", "-c", "npx prisma migrate deploy && node prisma/seed.js && node dist/index.js"]
