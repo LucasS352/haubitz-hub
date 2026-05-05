@@ -1,6 +1,6 @@
 node_modules
 dist
-.env
+# .env é necessário para o build do Vite (VITE_API_URL)
 .env.local
 .git
 *.md
