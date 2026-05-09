@@ -43,6 +43,12 @@ export class ValidationError extends AppError {
   }
 }
 
+export class BadRequestError extends AppError {
+  constructor(message = 'Requisição inválida') {
+    super(message, 400);
+  }
+}
+
 export class ConflictError extends AppError {
   constructor(message = 'Conflito: o recurso já existe') {
     super(message, 409);
