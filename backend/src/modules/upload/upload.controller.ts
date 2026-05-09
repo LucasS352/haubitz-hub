@@ -7,7 +7,7 @@ import { success } from '../../utils/response';
 import { BadRequestError } from '../../utils/errors';
 
 // Configurar o destino local para os uploads
-const uploadDir = path.join(__dirname, '../../../public/uploads');
+const uploadDir = path.join(process.cwd(), 'public/uploads');
 
 // Garante que o diretório exista
 if (!fs.existsSync(uploadDir)) {

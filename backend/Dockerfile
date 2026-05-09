@@ -60,5 +60,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD wget -qO- http://localhost:3000/health || exit 1
 
-# Roda migrations → seed → inicia servidor
-CMD ["sh", "-c", "./node_modules/.bin/prisma migrate deploy && node dist/prisma/seed.js && node dist/src/index.js"]
+# Comando temporário para manutenção (impede o restart loop)
+CMD ["sleep", "3600"]
