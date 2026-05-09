@@ -119,6 +119,7 @@ function StepRow({ step, index, isExpanded, onToggle }: {
 
 export default function OnboardingCard({ onboarding }: Props) {
   const [expandedStep, setExpandedStep] = useState<number | null>(null)
+  const [isCardExpanded, setIsCardExpanded] = useState(false)
 
   if (!onboarding) {
     return (
@@ -137,10 +138,21 @@ export default function OnboardingCard({ onboarding }: Props) {
   return (
     <div className="glass p-4 space-y-4">
       {/* Cabeçalho + barra */}
-      <div className="flex items-center justify-between">
-        <p className="text-xs font-semibold text-white/50 uppercase tracking-widest">Meu Onboarding</p>
-        <span className="text-xs font-bold text-brand-400">{completed}/{total} concluídas</span>
-      </div>
+      <button 
+        onClick={() => setIsCardExpanded(!isCardExpanded)}
+        className="w-full flex items-center justify-between cursor-pointer group"
+      >
+        <p className="text-xs font-semibold text-white/50 uppercase tracking-widest group-hover:text-white/70 transition-colors">Meu Onboarding</p>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold text-brand-400">{completed}/{total} concluídas</span>
+          <svg
+            className={`w-4 h-4 text-white/40 transition-transform duration-200 ${isCardExpanded ? 'rotate-180' : ''}`}
+            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+      </button>
 
       <div className="h-2 bg-white/10 rounded-full overflow-hidden">
         <div
@@ -150,23 +162,25 @@ export default function OnboardingCard({ onboarding }: Props) {
       </div>
 
       {/* Lista de etapas */}
-      <div className="space-y-2">
-        {steps.map((step, index) => (
-          <StepRow
-            key={step.stepNumber}
-            step={step}
-            index={index}
-            isExpanded={expandedStep === step.stepNumber}
-            onToggle={() => setExpandedStep(expandedStep === step.stepNumber ? null : step.stepNumber)}
-          />
-        ))}
+      {isCardExpanded && (
+        <div className="space-y-2 animate-fade-in pt-2">
+          {steps.map((step, index) => (
+            <StepRow
+              key={step.stepNumber}
+              step={step}
+              index={index}
+              isExpanded={expandedStep === step.stepNumber}
+              onToggle={() => setExpandedStep(expandedStep === step.stepNumber ? null : step.stepNumber)}
+            />
+          ))}
 
-        {onboarding.status === 'COMPLETED' && (
-          <div className="bg-green-500/10 border border-green-500/20 rounded-xl px-4 py-3 text-center mt-2">
-            <p className="text-sm font-semibold text-green-400">🎉 Onboarding 100% concluído!</p>
-          </div>
-        )}
-      </div>
+          {onboarding.status === 'COMPLETED' && (
+            <div className="bg-green-500/10 border border-green-500/20 rounded-xl px-4 py-3 text-center mt-2">
+              <p className="text-sm font-semibold text-green-400">🎉 Onboarding 100% concluído!</p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

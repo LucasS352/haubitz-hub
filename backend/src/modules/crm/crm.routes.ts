@@ -87,4 +87,26 @@ router.put(
   crmController.updateFollowUp
 );
 
+/**
+ * @route  DELETE /api/crm/interactions/:interactionId
+ * @desc   Exclui uma interação
+ * @access SDR, CLOSER, ADMIN, SUPERADMIN
+ */
+router.delete(
+  '/interactions/:interactionId',
+  authorize('SDR', 'CLOSER', 'ADMIN', 'SUPERADMIN'),
+  crmController.deleteInteraction
+);
+
+/**
+ * @route  PUT /api/crm/interactions/:interactionId
+ * @desc   Edita uma interação
+ * @access SDR, CLOSER, ADMIN, SUPERADMIN
+ */
+router.put(
+  '/interactions/:interactionId',
+  authorize('SDR', 'CLOSER', 'ADMIN', 'SUPERADMIN'),
+  crmController.updateInteraction
+);
+
 export default router;

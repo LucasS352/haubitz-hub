@@ -1,9 +1,37 @@
 interface Props {
   onOpenContrato: () => void
   onOpenPagamentos: () => void
+  paymentDay?: number
 }
 
-export default function QuickActions({ onOpenContrato, onOpenPagamentos }: Props) {
+export default function QuickActions({ onOpenContrato, onOpenPagamentos, paymentDay }: Props) {
+  let paymentStatus: 'normal' | 'warning' | 'late' = 'normal';
+  let paymentTooltip = 'Ver detalhes de pagamento';
+
+  if (paymentDay) {
+    const today = new Date();
+    const currentDay = today.getDate();
+    const diff = paymentDay - currentDay;
+    
+    if (diff === 0) {
+      paymentStatus = 'late';
+      paymentTooltip = 'Vencimento hoje!';
+    } else if (diff < 0 && diff >= -5) {
+      paymentStatus = 'late';
+      paymentTooltip = 'Pagamento atrasado!';
+    } else if (diff > 0 && diff <= 3) {
+      paymentStatus = 'warning';
+      paymentTooltip = `Vencimento em ${diff} dia${diff > 1 ? 's' : ''}`;
+    }
+  }
+
+  const getPaymentColors = () => {
+    if (paymentStatus === 'late') return { box: 'bg-red-500/20 group-hover:bg-red-500/30', border: 'border-red-500/50', text: 'text-red-400' };
+    if (paymentStatus === 'warning') return { box: 'bg-yellow-500/20 group-hover:bg-yellow-500/30', border: 'border-yellow-500/50', text: 'text-yellow-400' };
+    return { box: 'bg-white/5 group-hover:bg-white/10', border: 'border-transparent hover:border-white/20', text: 'text-white/70' };
+  };
+
+  const pColors = getPaymentColors();
   return (
     <div className="grid grid-cols-3 gap-3">
       {/* Meu Contrato */}
@@ -24,14 +52,15 @@ export default function QuickActions({ onOpenContrato, onOpenPagamentos }: Props
       <button
         id="btn-pagamentos"
         onClick={onOpenPagamentos}
-        className="glass flex flex-col items-center gap-2 p-4 hover:border-white/20 transition-all duration-200 active:scale-95 group"
+        title={paymentTooltip}
+        className={`glass flex flex-col items-center gap-2 p-4 transition-all duration-200 active:scale-95 group border ${pColors.border}`}
       >
-        <div className="w-10 h-10 rounded-xl bg-white/5 group-hover:bg-white/10 flex items-center justify-center transition-colors">
-          <svg className="w-5 h-5 text-white/70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${pColors.box}`}>
+          <svg className={`w-5 h-5 ${pColors.text}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
-        <p className="text-[11px] font-medium text-white/70 text-center leading-tight">Pagamentos</p>
+        <p className={`text-[11px] font-medium text-center leading-tight ${pColors.text}`}>Pagamentos</p>
       </button>
 
       {/* Suporte 24h */}

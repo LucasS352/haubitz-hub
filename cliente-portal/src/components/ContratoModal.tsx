@@ -2,16 +2,44 @@ import ModalShell from './ModalShell'
 
 interface Props {
   info: string
+  pdfUrl?: string
   onClose: () => void
 }
 
-export default function ContratoModal({ info, onClose }: Props) {
+export default function ContratoModal({ info, pdfUrl, onClose }: Props) {
   return (
     <ModalShell title="Meu Contrato" onClose={onClose}>
       <div className="space-y-4">
+        {pdfUrl && (
+          <a
+            href={pdfUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full glass border border-brand-500/30 hover:border-brand-500/60 transition-all p-4 flex items-center justify-between group no-underline"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-brand-500/10 flex items-center justify-center">
+                <svg className="w-5 h-5 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                </svg>
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-semibold text-white">Documento Original</p>
+                <p className="text-xs text-white/50">Clique para abrir o contrato</p>
+              </div>
+            </div>
+            <svg className="w-4 h-4 text-white/30 group-hover:text-brand-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          </a>
+        )}
+
         {info ? (
-          <div className="glass p-4 text-sm text-white/80 whitespace-pre-wrap leading-relaxed min-h-[120px]">
-            {info}
+          <div>
+            <h4 className="text-xs font-semibold text-white/50 uppercase tracking-widest mb-2 px-1">Observações</h4>
+            <div className="glass p-4 text-sm text-white/80 whitespace-pre-wrap leading-relaxed min-h-[80px]">
+              {info}
+            </div>
           </div>
         ) : (
           <div className="text-center py-8 text-white/40">

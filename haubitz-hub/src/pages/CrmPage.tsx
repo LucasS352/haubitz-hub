@@ -5,7 +5,7 @@ import api from '@/lib/api';
 import { AppHeader } from '@/components/AppHeader';
 import { StatusBadge } from '@/components/StatusBadge';
 import { ListSkeleton, MetricCardSkeleton } from '@/components/Skeletons';
-import { Plus, X, Phone, Mail, MessageCircle, Users, FileText, GripVertical, Target, TrendingUp, DollarSign, Award } from 'lucide-react';
+import { Plus, X, Phone, Mail, MessageCircle, Users, FileText, GripVertical, Target, TrendingUp, DollarSign, Award, Trash2, Edit2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import type { Lead, PipelineStage, InteractionType, CrmDashboard } from '@/types';
@@ -38,6 +38,8 @@ const CrmPage = () => {
   const [newLeadForm, setNewLeadForm] = useState({ name: '', email: '', phone: '', businessName: '', source: '', companyId: '' });
   const [newInteraction, setNewInteraction] = useState<{ type: InteractionType; notes: string; duration?: number } | null>(null);
   const [draggedLead, setDraggedLead] = useState<string | null>(null);
+  const [editingInteractionId, setEditingInteractionId] = useState<string | null>(null);
+  const [editingInteractionNotes, setEditingInteractionNotes] = useState<string>('');
 
   const { data: leads, isLoading } = useQuery({
     queryKey: ['leads'],
@@ -86,12 +88,78 @@ const CrmPage = () => {
   const addInteractionMutation = useMutation({
     mutationFn: ({ leadId, data }: { leadId: string; data: any }) =>
       api.post(`/crm/leads/${leadId}/interactions`, data),
-    onSuccess: () => {
+    onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ['leads'] });
       toast.success('Interação registrada!');
       setNewInteraction(null);
+      if (selectedLead && res.data?.data) {
+        setSelectedLead({
+          ...selectedLead,
+          interactions: [res.data.data, ...(selectedLead.interactions || [])]
+        });
+      }
     },
   });
+
+  const updateLeadMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) =>
+      api.put(`/crm/leads/${id}`, data),
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ['leads'] });
+      const updatedLead = res.data?.data || res.data;
+      if (selectedLead && updatedLead) {
+        setSelectedLead({
+          ...selectedLead,
+          ...updatedLead,
+          interactions: selectedLead.interactions,
+          followUps: selectedLead.followUps
+        });
+      }
+      toast.success('Lead atualizado!');
+    },
+  });
+
+  const deleteInteractionMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/crm/interactions/${id}`),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ['leads'] });
+      toast.success('Interação excluída!');
+      if (selectedLead) {
+        setSelectedLead({
+          ...selectedLead,
+          interactions: selectedLead.interactions?.filter(i => i.id !== id)
+        });
+      }
+    },
+  });
+
+  const updateInteractionMutation = useMutation({
+    mutationFn: ({ id, notes }: { id: string; notes: string }) => api.put(`/crm/interactions/${id}`, { notes }),
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ['leads'] });
+      toast.success('Interação atualizada!');
+      setEditingInteractionId(null);
+      if (selectedLead && res.data?.data) {
+        setSelectedLead({
+          ...selectedLead,
+          interactions: selectedLead.interactions?.map(i => i.id === res.data.data.id ? res.data.data : i)
+        });
+      }
+    },
+  });
+
+  const handleLeadClick = async (lead: Lead) => {
+    // Exibe imediatamente os dados básicos do painel
+    setSelectedLead(lead);
+    // Busca as interações e detalhes completos do servidor
+    try {
+      const { data } = await api.get(`/crm/leads/${lead.id}`);
+      const fullLead = data.data || data;
+      setSelectedLead(fullLead);
+    } catch (err) {
+      console.error('Erro ao buscar detalhes do lead', err);
+    }
+  };
 
   const inputClass = "w-full bg-muted/50 border border-border rounded-md py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50";
 
@@ -148,7 +216,7 @@ const CrmPage = () => {
                         key={lead.id}
                         draggable
                         onDragStart={() => setDraggedLead(lead.id)}
-                        onClick={() => setSelectedLead(lead)}
+                        onClick={() => handleLeadClick(lead)}
                         className="p-3 rounded-lg bg-muted/30 border border-border hover:border-primary/30 cursor-pointer transition-all space-y-1"
                       >
                         <div className="flex items-center gap-2">
@@ -179,7 +247,7 @@ const CrmPage = () => {
                       </div>
                     </div>
                     {stageLeads.slice(0, 3).map(l => (
-                      <div key={l.id} onClick={() => setSelectedLead(l)} className="flex items-center justify-between py-1.5 text-sm cursor-pointer hover:text-primary transition-colors">
+                      <div key={l.id} onClick={() => handleLeadClick(l)} className="flex items-center justify-between py-1.5 text-sm cursor-pointer hover:text-primary transition-colors">
                         <span>{l.name}</span>
                         <span className="text-xs text-muted-foreground">R$ {(l.proposalValue || 0).toLocaleString('pt-BR')}</span>
                       </div>
@@ -208,7 +276,7 @@ const CrmPage = () => {
                   </thead>
                   <tbody>
                     {leads?.map(l => (
-                      <tr key={l.id} onClick={() => setSelectedLead(l)} className="border-b border-border hover:bg-muted/30 cursor-pointer transition-colors">
+                      <tr key={l.id} onClick={() => handleLeadClick(l)} className="border-b border-border hover:bg-muted/30 cursor-pointer transition-colors">
                         <td className="p-4 font-medium">{l.name}</td>
                         <td className="p-4 text-muted-foreground hidden md:table-cell">{l.businessName || '—'}</td>
                         <td className="p-4 text-muted-foreground hidden md:table-cell">{l.source || '—'}</td>
@@ -291,7 +359,27 @@ const CrmPage = () => {
                 <span className="text-muted-foreground">Estágio:</span>
                 <StatusBadge status={selectedLead.pipelineStage} />
               </div>
-              {selectedLead.proposalValue && <p className="text-success font-medium">Valor: R$ {selectedLead.proposalValue.toLocaleString('pt-BR')}</p>}
+              <div className="flex items-center gap-2">
+                {selectedLead.proposalValue ? (
+                  <p className="text-success font-medium">Valor: R$ {Number(selectedLead.proposalValue).toLocaleString('pt-BR')}</p>
+                ) : (
+                  <p className="text-muted-foreground">Valor: Não definido</p>
+                )}
+                <button
+                  onClick={() => {
+                    const val = prompt('Digite o valor do projeto (ex: 2500.50):', selectedLead.proposalValue?.toString() || '');
+                    if (val !== null) {
+                      const num = parseFloat(val.replace(',', '.'));
+                      if (!isNaN(num)) {
+                        updateLeadMutation.mutate({ id: selectedLead.id, data: { proposalValue: num } });
+                      }
+                    }
+                  }}
+                  className="text-xs text-primary hover:underline ml-2"
+                >
+                  {selectedLead.proposalValue ? 'Editar Valor' : 'Adicionar Valor'}
+                </button>
+              </div>
             </div>
 
             {/* Move pipeline */}
@@ -337,12 +425,29 @@ const CrmPage = () => {
               <div className="space-y-2">
                 {selectedLead.interactions?.map((i) => {
                   const Icon = interactionIcons[i.type] || FileText;
+                  const isEditing = editingInteractionId === i.id;
                   return (
-                    <div key={i.id} className="flex gap-3 text-sm p-2 rounded-lg bg-muted/20">
+                    <div key={i.id} className="flex gap-3 text-sm p-3 rounded-lg bg-muted/20 relative group">
                       <Icon className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                      <div>
-                        <p className="text-xs text-muted-foreground">{new Date(i.createdAt).toLocaleDateString('pt-BR')} · {i.createdBy}{i.duration ? ` · ${i.duration}min` : ''}</p>
-                        {i.notes && <p className="text-sm">{i.notes}</p>}
+                      <div className="w-full">
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs text-muted-foreground">{new Date(i.createdAt).toLocaleDateString('pt-BR')} · {i.user?.name || i.createdBy}{i.duration ? ` · ${i.duration}min` : ''}</p>
+                          <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onClick={() => { setEditingInteractionId(i.id); setEditingInteractionNotes(i.notes); }} className="text-muted-foreground hover:text-primary transition-colors"><Edit2 className="h-3.5 w-3.5" /></button>
+                            <button onClick={() => { if (confirm('Excluir interação?')) deleteInteractionMutation.mutate(i.id); }} className="text-muted-foreground hover:text-destructive transition-colors"><Trash2 className="h-3.5 w-3.5" /></button>
+                          </div>
+                        </div>
+                        {isEditing ? (
+                          <div className="mt-2 space-y-2">
+                            <textarea value={editingInteractionNotes} onChange={(e) => setEditingInteractionNotes(e.target.value)} className={`${inputClass} h-16 resize-none`} />
+                            <div className="flex gap-2">
+                              <button onClick={() => updateInteractionMutation.mutate({ id: i.id, notes: editingInteractionNotes })} className="px-3 py-1.5 rounded-md gradient-primary text-primary-foreground text-xs font-medium">Salvar</button>
+                              <button onClick={() => setEditingInteractionId(null)} className="text-xs text-muted-foreground">Cancelar</button>
+                            </div>
+                          </div>
+                        ) : (
+                          i.notes && <p className="text-sm mt-1 whitespace-pre-wrap">{i.notes}</p>
+                        )}
                       </div>
                     </div>
                   );

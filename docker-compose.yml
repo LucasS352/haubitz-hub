@@ -50,6 +50,8 @@ services:
       ADMIN_EMAIL: kayke@haubitz.com.br
       ADMIN_PASSWORD: Haubitz@2024!
       ADMIN_NAME: Kayke
+    volumes:
+      - haubitz_uploads:/app/public/uploads
     depends_on:
       db:
         condition: service_healthy
@@ -96,6 +98,8 @@ services:
 
 volumes:
   haubitz_db_data:
+    driver: local
+  haubitz_uploads:
     driver: local
 
 networks:

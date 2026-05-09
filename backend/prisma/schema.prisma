@@ -173,9 +173,14 @@ model Company {
   facebookUrl  String? @map("facebook_url")
   tiktokUrl    String? @map("tiktok_url")
 
-  // Informações de contrato e pagamento (texto livre — preenchido pela Haubitz)
+  // Informações de contrato e pagamento
   contratoInfo   String? @map("contrato_info")   @db.Text
   pagamentosInfo String? @map("pagamentos_info") @db.Text
+  
+  // Novos campos: Upload de PDFs e Dia de Pagamento
+  onboardingPdfUrl String? @map("onboarding_pdf_url") @db.Text
+  contractPdfUrl   String? @map("contract_pdf_url")   @db.Text
+  paymentDay       Int?    @map("payment_day") // 1 a 31
 
   // Token da API Meta do cliente (salvo pelo próprio cliente no portal)
   metaAccessToken String? @map("meta_access_token") @db.Text

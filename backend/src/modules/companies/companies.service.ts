@@ -33,6 +33,9 @@ const COMPANY_SELECT = {
   contratoInfo: true,
   pagamentosInfo: true,
   metaAccessToken: true,
+  onboardingPdfUrl: true,
+  contractPdfUrl: true,
+  paymentDay: true,
   createdBy: { select: { id: true, name: true } },
   onboarding: {
     select: {
@@ -163,6 +166,9 @@ export const companiesService = {
         ...(data.notes !== undefined && { notes: data.notes }),
         ...(data.contractStart && { contractStart: new Date(data.contractStart) }),
         ...(data.contractEnd && { contractEnd: new Date(data.contractEnd) }),
+        ...(data.onboardingPdfUrl !== undefined && { onboardingPdfUrl: data.onboardingPdfUrl }),
+        ...(data.contractPdfUrl !== undefined && { contractPdfUrl: data.contractPdfUrl }),
+        ...(data.paymentDay !== undefined && { paymentDay: data.paymentDay }),
       },
       select: COMPANY_SELECT,
     });
@@ -200,6 +206,9 @@ export const companiesService = {
     contratoInfo?: string;
     pagamentosInfo?: string;
     metaAccessToken?: string;
+    onboardingPdfUrl?: string;
+    contractPdfUrl?: string;
+    paymentDay?: number;
   }) {
     const company = await prisma.company.findUnique({ where: { id } });
     if (!company) throw new NotFoundError('Empresa não encontrada');
@@ -216,6 +225,9 @@ export const companiesService = {
         ...(data.contratoInfo    !== undefined && { contratoInfo:    data.contratoInfo }),
         ...(data.pagamentosInfo  !== undefined && { pagamentosInfo:  data.pagamentosInfo }),
         ...(data.metaAccessToken !== undefined && { metaAccessToken: data.metaAccessToken }),
+        ...(data.onboardingPdfUrl !== undefined && { onboardingPdfUrl: data.onboardingPdfUrl }),
+        ...(data.contractPdfUrl !== undefined && { contractPdfUrl: data.contractPdfUrl }),
+        ...(data.paymentDay !== undefined && { paymentDay: data.paymentDay }),
       },
       select: {
         id: true,
@@ -230,6 +242,9 @@ export const companiesService = {
         pagamentosInfo: true,
         metaAccessToken: true,
         clientPortalToken: true,
+        onboardingPdfUrl: true,
+        contractPdfUrl: true,
+        paymentDay: true,
       },
     });
   },

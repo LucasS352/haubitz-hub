@@ -35,12 +35,23 @@ export default function TrafegoPagoModal({ current, onClose, onSave }: Props) {
     }
   }
 
+  const today = new Date();
+  const nextMonth = new Date(today);
+  nextMonth.setDate(today.getDate() + 30);
+  const formatDate = (d: Date) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+
   return (
     <ModalShell title="Tráfego Pago" onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-5">
-        <div className="bg-brand-500/10 border border-brand-500/20 rounded-xl p-4 text-sm text-white/70">
+        <div className="bg-brand-500/10 border border-brand-500/20 rounded-xl p-4 text-sm text-white/70 space-y-2">
           <p>Defina o valor mensal que você deseja investir em anúncios pagos.</p>
-          <p className="mt-1 text-xs text-white/40">Valor mínimo: <span className="text-white font-medium">R$ 7,00</span></p>
+          <p className="text-white/80">
+            Ajustaremos o orçamento em até 2 horas, o valor abaixo será trabalhado por 30 dias.
+          </p>
+          <p className="text-xs text-white/60">
+            Hoje é {formatDate(today)}, esse orçamento será trabalhado até <strong>{formatDate(nextMonth)}</strong>.
+          </p>
+          <p className="text-xs text-white/40 pt-1">Valor mínimo: <span className="text-white font-medium">R$ 7,00</span></p>
         </div>
 
         <div>

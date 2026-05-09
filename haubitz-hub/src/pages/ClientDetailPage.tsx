@@ -40,6 +40,9 @@ const PortalTab = ({ company, companyId }: { company: Company; companyId: string
     contratoInfo: company.contratoInfo ?? '',
     pagamentosInfo: company.pagamentosInfo ?? '',
     metaAccessToken: company.metaAccessToken ?? '',
+    onboardingPdfUrl: company.onboardingPdfUrl ?? '',
+    contractPdfUrl: company.contractPdfUrl ?? '',
+    paymentDay: company.paymentDay ?? '',
   });
 
   const savePortalMutation = useMutation({
@@ -50,6 +53,7 @@ const PortalTab = ({ company, companyId }: { company: Company; companyId: string
         faturamento: data.faturamento !== '' ? Number(data.faturamento) : undefined,
         roi: data.roi !== '' ? Number(data.roi) : undefined,
         metaAccessToken: data.metaAccessToken || undefined,
+        paymentDay: data.paymentDay !== '' ? Number(data.paymentDay) : undefined,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['company', companyId] });
@@ -128,6 +132,26 @@ const PortalTab = ({ company, companyId }: { company: Company; companyId: string
         </button>
       </div>
 
+      {/* Onboarding PDF */}
+      <div className="glass-card p-5 space-y-4">
+        <h3 className="font-semibold text-sm">Material de Planejamento (Onboarding)</h3>
+        <div>
+          <label className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">
+            Link do Calendário/Estratégia (Google Drive / Canva)
+          </label>
+          <input
+            type="url"
+            value={portalForm.onboardingPdfUrl}
+            onChange={(e) => setPortalForm((f) => ({ ...f, onboardingPdfUrl: e.target.value }))}
+            placeholder="https://canva.com/..."
+            className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 mb-1"
+          />
+          <p className="text-xs text-muted-foreground">
+            Este link será exibido no Portal do Cliente ao lado das etapas de onboarding.
+          </p>
+        </div>
+      </div>
+
       {/* Métricas */}
       <div className="glass-card p-5 space-y-4">
         <h3 className="font-semibold text-sm">Métricas Financeiras</h3>
@@ -180,19 +204,42 @@ const PortalTab = ({ company, companyId }: { company: Company; companyId: string
         <div className="space-y-3">
           <div>
             <label className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">
-              Informações do Contrato
+              Link do PDF do Contrato (Google Drive / Canva)
+            </label>
+            <input
+              type="url"
+              value={portalForm.contractPdfUrl}
+              onChange={(e) => setPortalForm((f) => ({ ...f, contractPdfUrl: e.target.value }))}
+              placeholder="https://..."
+              className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 mb-3"
+            />
+            <label className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">
+              Observações do Contrato
             </label>
             <textarea
               value={portalForm.contratoInfo}
               onChange={(e) => setPortalForm((f) => ({ ...f, contratoInfo: e.target.value }))}
-              placeholder="Detalhes do contrato, vigência, cláusulas importantes..."
-              rows={4}
+              placeholder="Detalhes adicionais, vigência, cláusulas importantes..."
+              rows={3}
               className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 resize-none"
             />
           </div>
           <div>
             <label className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">
-              Informações de Pagamento
+              Dia de Vencimento
+            </label>
+            <select
+              value={portalForm.paymentDay}
+              onChange={(e) => setPortalForm((f) => ({ ...f, paymentDay: e.target.value }))}
+              className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 mb-3"
+            >
+              <option value="">Selecione o dia</option>
+              {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                <option key={day} value={day}>Dia {day}</option>
+              ))}
+            </select>
+            <label className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">
+              Observações de Pagamento
             </label>
             <textarea
               value={portalForm.pagamentosInfo}
@@ -410,6 +457,7 @@ const ClientDetailPage = () => {
                   <h3 className="font-semibold">Onboarding</h3>
                   <StatusBadge status={ob?.status || 'NOT_STARTED'} />
                 </div>
+                
                 <ProgressBar value={completedSteps} max={steps.length || 7} className="mb-6" />
 
                 {/* Timeline */}

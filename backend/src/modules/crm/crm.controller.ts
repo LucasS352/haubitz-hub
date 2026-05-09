@@ -161,4 +161,34 @@ export const crmController = {
       next(error);
     }
   },
+
+  async deleteInteraction(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      await crmService.deleteInteraction(
+        req.params.interactionId,
+        req.user!.companyId,
+        req.user!.isSuperAdmin
+      );
+      res.status(200).json(success(null, 'Interação excluída com sucesso'));
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async updateInteraction(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const notes = req.body.notes;
+      if (!notes) throw new Error('Notas são obrigatórias');
+      
+      const interaction = await crmService.updateInteraction(
+        req.params.interactionId,
+        notes,
+        req.user!.companyId,
+        req.user!.isSuperAdmin
+      );
+      res.status(200).json(success(interaction, 'Interação atualizada'));
+    } catch (error) {
+      next(error);
+    }
+  },
 };

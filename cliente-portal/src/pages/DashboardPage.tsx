@@ -95,10 +95,34 @@ export default function DashboardPage({ company, onCompanyUpdate, onLogout }: Pr
         {/* 2. Status do onboarding */}
         <OnboardingCard onboarding={company.onboarding} />
 
+        {/* 2.5. PDF/Imagem de Planejamento */}
+        {company.onboardingPdfUrl && (
+          <div className="glass p-4 animate-fade-in mt-4">
+            <h3 className="text-xs font-semibold text-white/50 uppercase tracking-widest mb-3">Material de Planejamento</h3>
+            <div className="w-full h-64 md:h-96 rounded-xl overflow-hidden bg-black/20 border border-white/5">
+              <iframe 
+                src={company.onboardingPdfUrl} 
+                className="w-full h-full border-0"
+                allowFullScreen
+                title="Planejamento"
+              />
+            </div>
+            <a 
+              href={company.onboardingPdfUrl} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="mt-3 block text-center text-xs text-brand-400 hover:text-brand-300 transition-colors"
+            >
+              Abrir em nova guia
+            </a>
+          </div>
+        )}
+
         {/* 3. Ações rápidas (Contrato, Pagamentos, Suporte) */}
         <QuickActions
           onOpenContrato={() => setModal('contrato')}
           onOpenPagamentos={() => setModal('pagamentos')}
+          paymentDay={company.paymentDay}
         />
 
         {/* 4. Botão Tráfego Pago */}
@@ -180,6 +204,7 @@ export default function DashboardPage({ company, onCompanyUpdate, onLogout }: Pr
       {modal === 'contrato' && (
         <ContratoModal
           info={company.contratoInfo || ''}
+          pdfUrl={company.contractPdfUrl}
           onClose={() => setModal(null)}
         />
       )}

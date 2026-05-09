@@ -295,6 +295,33 @@ export const crmService = {
     });
   },
 
+  async deleteInteraction(interactionId: string, callerCompanyId: string | null, isSuperAdmin: boolean) {
+    const interaction = await prisma.crmInteraction.findUnique({
+      where: { id: interactionId },
+      include: { lead: { select: { companyId: true } } },
+    });
+    if (!interaction) throw new NotFoundError('Interação não encontrada');
+    if (!isSuperAdmin && interaction.lead.companyId !== callerCompanyId) throw new ForbiddenError();
+
+    await prisma.crmInteraction.delete({ where: { id: interactionId } });
+    return true;
+  },
+
+  async updateInteraction(interactionId: string, notes: string, callerCompanyId: string | null, isSuperAdmin: boolean) {
+    const interaction = await prisma.crmInteraction.findUnique({
+      where: { id: interactionId },
+      include: { lead: { select: { companyId: true } } },
+    });
+    if (!interaction) throw new NotFoundError('Interação não encontrada');
+    if (!isSuperAdmin && interaction.lead.companyId !== callerCompanyId) throw new ForbiddenError();
+
+    return prisma.crmInteraction.update({
+      where: { id: interactionId },
+      data: { notes },
+      include: { user: { select: { id: true, name: true } } },
+    });
+  },
+
   // ========== FOLLOW-UPS ==========
 
   async createFollowUp(
