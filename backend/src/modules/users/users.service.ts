@@ -25,7 +25,7 @@ const USER_PUBLIC_SELECT = {
   lastLoginAt: true,
   createdAt: true,
   company: { select: { id: true, name: true } },
-  permissions: { include: { permission: true } },
+  permissions: { select: { permission: true } },
 } as const;
 
 export const usersService = {

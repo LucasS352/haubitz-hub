@@ -149,7 +149,7 @@ export const authService = {
       select: {
         ...USER_SELECT,
         permissions: {
-          include: { permission: true },
+          select: { permission: true },
         },
         createdAt: true,
         lastLoginAt: true,
