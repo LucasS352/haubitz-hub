@@ -40,7 +40,7 @@ router.get('/:id', authorize('SUPERADMIN', 'ADMIN'), usersController.findById);
  * @desc   Atualiza dados do usuário
  * @access SUPERADMIN
  */
-router.put('/:id', authorize('SUPERADMIN'), usersController.update);
+router.put('/:id', usersController.update);
 
 /**
  * @route  DELETE /api/users/:id

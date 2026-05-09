@@ -9,6 +9,18 @@ import ContratoModal from '../components/ContratoModal'
 import PagamentosModal from '../components/PagamentosModal'
 import SocialLinks from '../components/SocialLinks'
 
+// Helper para formatar links externos para iframe (Google Drive, Canva, etc)
+const formatEmbedUrl = (url: string) => {
+  if (!url) return '';
+  
+  // Google Drive: /view ou /edit -> /preview
+  if (url.includes('drive.google.com')) {
+    return url.replace(/\/view(\?.*)?$/, '/preview').replace(/\/edit(\?.*)?$/, '/preview');
+  }
+  
+  return url;
+};
+
 interface Props {
   company: PortalCompany
   onCompanyUpdate: (c: PortalCompany) => void
@@ -16,7 +28,7 @@ interface Props {
 }
 
 export default function DashboardPage({ company, onCompanyUpdate, onLogout }: Props) {
-  const [modal, setModal] = useState<'trafego' | 'contrato' | 'pagamentos' | null>(null)
+  const [modal, setModal] = useState<'trafego' | 'contrato' | 'pagamentos' | 'planejamento' | null>(null)
 
   // Sempre busca dados frescos da API ao abrir (garante checklist atualizado)
   useEffect(() => {
@@ -40,14 +52,25 @@ export default function DashboardPage({ company, onCompanyUpdate, onLogout }: Pr
     .join('')
     .toUpperCase()
 
+  const getFullUrl = (url: string) => {
+    if (!url) return '';
+    if (url.startsWith('http')) return url;
+    const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+    return apiBase.replace('/api', '') + url;
+  };
+
   return (
     <div className="min-h-dvh bg-slate-950 flex flex-col">
       {/* ── Header ───────────────────────────────── */}
       <header className="sticky top-0 z-30 bg-slate-950/80 backdrop-blur-md border-b border-white/5 px-5 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           {/* Avatar / Iniciais */}
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center text-sm font-bold text-white shadow-md">
-            {initials}
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center text-sm font-bold text-white shadow-md overflow-hidden">
+            {company.avatar ? (
+              <img src={getFullUrl(company.avatar)} alt={company.name} className="w-full h-full object-cover" />
+            ) : (
+              initials
+            )}
           </div>
           <div>
             <p className="text-xs text-white/40 leading-none">Bem-vindo(a)</p>
@@ -95,27 +118,33 @@ export default function DashboardPage({ company, onCompanyUpdate, onLogout }: Pr
         {/* 2. Status do onboarding */}
         <OnboardingCard onboarding={company.onboarding} />
 
-        {/* 2.5. PDF/Imagem de Planejamento */}
+        {/* 2.5. Material de Planejamento (Acesso Rápido) */}
         {company.onboardingPdfUrl && (
-          <div className="glass p-4 animate-fade-in mt-4">
-            <h3 className="text-xs font-semibold text-white/50 uppercase tracking-widest mb-3">Material de Planejamento</h3>
-            <div className="w-full h-64 md:h-96 rounded-xl overflow-hidden bg-black/20 border border-white/5">
-              <iframe 
-                src={company.onboardingPdfUrl} 
-                className="w-full h-full border-0"
-                allowFullScreen
-                title="Planejamento"
-              />
+          <button
+            onClick={() => setModal('planejamento')}
+            className="w-full glass p-5 animate-fade-in mt-4 border border-brand-500/10 hover:border-brand-500/40 transition-all duration-300 group relative overflow-hidden text-left"
+          >
+            {/* Background Decorativo */}
+            <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-brand-500/10 rounded-full blur-2xl group-hover:bg-brand-500/20 transition-all" />
+            
+            <div className="flex items-center gap-4 relative z-10">
+              <div className="w-12 h-12 rounded-2xl bg-brand-500/10 flex items-center justify-center text-brand-400 group-hover:scale-110 transition-transform shadow-lg border border-brand-500/20">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-[10px] font-bold text-brand-400 uppercase tracking-[0.2em] mb-1">Estratégia & Design</h3>
+                <p className="text-sm font-semibold text-white group-hover:text-brand-400 transition-colors">Material de Planejamento</p>
+                <p className="text-xs text-white/40">Clique para visualizar o cronograma e ativos</p>
+              </div>
+              <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/30 group-hover:text-brand-400 group-hover:bg-brand-500/20 transition-all">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
             </div>
-            <a 
-              href={company.onboardingPdfUrl} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="mt-3 block text-center text-xs text-brand-400 hover:text-brand-300 transition-colors"
-            >
-              Abrir em nova guia
-            </a>
-          </div>
+          </button>
         )}
 
         {/* 3. Ações rápidas (Contrato, Pagamentos, Suporte) */}
@@ -212,8 +241,64 @@ export default function DashboardPage({ company, onCompanyUpdate, onLogout }: Pr
       {modal === 'pagamentos' && (
         <PagamentosModal
           info={company.pagamentosInfo || ''}
+          paymentDay={Number(company.paymentDay) || undefined}
           onClose={() => setModal(null)}
         />
+      )}
+
+      {modal === 'planejamento' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 backdrop-blur-xl bg-black/80 animate-fade-in">
+          <div className="w-full max-w-4xl max-h-[90dvh] glass rounded-3xl overflow-hidden flex flex-col shadow-2xl border border-white/10">
+            <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/5">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-brand-500/20 flex items-center justify-center text-brand-400">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  </svg>
+                </div>
+                <h2 className="text-sm font-bold text-white uppercase tracking-widest">Material de Planejamento</h2>
+              </div>
+              <div className="flex items-center gap-2">
+                <a 
+                  href={company.onboardingPdfUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-all"
+                  title="Abrir em nova aba"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
+                <button 
+                  onClick={() => setModal(null)}
+                  className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-all"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+            <div className="flex-1 overflow-auto bg-black/40 min-h-[400px] flex items-center justify-center p-2">
+              {/\.(jpg|jpeg|png|webp|gif|svg)$/i.test(company.onboardingPdfUrl!) ? (
+                <img 
+                  src={company.onboardingPdfUrl} 
+                  alt="Planejamento" 
+                  className="max-w-full h-auto object-contain shadow-2xl rounded-lg"
+                />
+              ) : (
+                <iframe 
+                  src={formatEmbedUrl(company.onboardingPdfUrl!)} 
+                  className="w-full h-full min-h-[60vh] border-0 rounded-lg"
+                  allowFullScreen
+                  title="Planejamento"
+                />
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

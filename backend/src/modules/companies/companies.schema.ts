@@ -35,6 +35,7 @@ export const createCompanySchema = z.object({
   onboardingPdfUrl: z.string().optional().nullable(),
   contractPdfUrl: z.string().optional().nullable(),
   paymentDay: z.number().int().min(1).max(31).optional().nullable(),
+  avatar: z.string().optional().nullable(),
 });
 
 export const updateCompanySchema = createCompanySchema.partial().extend({

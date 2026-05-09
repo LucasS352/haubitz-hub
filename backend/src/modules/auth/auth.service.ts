@@ -17,6 +17,7 @@ const USER_SELECT = {
   email: true,
   role: true,
   companyId: true,
+  avatar: true,
   company: {
     select: { id: true, name: true },
   },

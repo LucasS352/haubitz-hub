@@ -23,11 +23,14 @@ export interface PortalCompany {
   // Contrato & Pagamento
   contratoInfo?: string
   pagamentosInfo?: string
+  contractPdfUrl?: string
+  paymentDay?: number
 
   // Meta API
   metaAccessToken?: string
 
   // Onboarding
+  onboardingPdfUrl?: string
   onboarding?: {
     id: string
     status: string

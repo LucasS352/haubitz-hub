@@ -21,6 +21,7 @@ const USER_PUBLIC_SELECT = {
   role: true,
   companyId: true,
   isActive: true,
+  avatar: true,
   lastLoginAt: true,
   createdAt: true,
   company: { select: { id: true, name: true } },
@@ -107,12 +108,17 @@ export const usersService = {
     return user;
   },
 
-  async update(id: string, data: UpdateUserInput, callerCompanyId?: string | null, isSuperAdmin = false) {
+  async update(id: string, data: UpdateUserInput, callerId: string, callerCompanyId?: string | null, isSuperAdmin = false) {
     const user = await prisma.user.findUnique({ where: { id } });
     if (!user) throw new NotFoundError('Usuário não encontrado');
-    if (user.role === 'SUPERADMIN') throw new ForbiddenError('Não é possível editar o SuperAdmin');
+    
+    // Bloqueia edição de SuperAdmin por outros usuários, mas permite que o próprio SuperAdmin se edite
+    if (user.role === 'SUPERADMIN' && id !== callerId) {
+      throw new ForbiddenError('Não é possível editar o SuperAdmin');
+    }
 
-    if (!isSuperAdmin && user.companyId !== callerCompanyId) {
+    const isSelfUpdate = id === callerId;
+    if (!isSuperAdmin && !isSelfUpdate && user.companyId !== callerCompanyId) {
       throw new ForbiddenError();
     }
 
@@ -131,6 +137,7 @@ export const usersService = {
         ...(data.role && { role: data.role as any }),
         ...(data.companyId !== undefined && { companyId: data.companyId }),
         ...(data.isActive !== undefined && { isActive: data.isActive }),
+        ...(data.avatar !== undefined && { avatar: data.avatar }),
       },
       select: USER_PUBLIC_SELECT,
     });

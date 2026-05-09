@@ -16,6 +16,7 @@ export interface User {
   companyId?: string | null;
   company?: { id: string; name: string } | null;
   isActive: boolean;
+  avatar?: string;
   lastLoginAt?: string;
   permissions?: { permission: Permission }[];
   createdAt?: string;
@@ -98,6 +99,10 @@ export interface Company {
   contratoInfo?: string;
   pagamentosInfo?: string;
   metaAccessToken?: string;
+  avatar?: string;
+  onboardingPdfUrl?: string;
+  contractPdfUrl?: string;
+  paymentDay?: number;
 }
 
 export type PipelineStage =

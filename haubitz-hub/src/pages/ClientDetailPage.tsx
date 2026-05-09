@@ -4,9 +4,33 @@ import api from '@/lib/api';
 import { AppHeader } from '@/components/AppHeader';
 import { StatusBadge, ProgressBar } from '@/components/StatusBadge';
 import { MetricCardSkeleton } from '@/components/Skeletons';
-import { Building2, Mail, Phone, Globe, Calendar, Check, Clock, Circle, Loader2, Zap, Copy, RefreshCw, Save } from 'lucide-react';
+import { 
+  Building2, 
+  Mail, 
+  Phone, 
+  Globe, 
+  Calendar, 
+  ArrowLeft, 
+  Save, 
+  Loader2, 
+  ExternalLink,
+  Shield,
+  FileText,
+  CreditCard,
+  MessageSquare,
+  Copy,
+  Check,
+  RefreshCw,
+  Trash2,
+  Camera,
+  Clock,
+  Circle,
+  Zap,
+  ChevronDown
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';
+import { FileUploader } from '@/components/FileUploader';
 import type { Company, OnboardingStep } from '@/types';
 
 const stepTitles = [
@@ -132,23 +156,24 @@ const PortalTab = ({ company, companyId }: { company: Company; companyId: string
         </button>
       </div>
 
-      {/* Onboarding PDF */}
+      {/* Onboarding Material */}
       <div className="glass-card p-5 space-y-4">
-        <h3 className="font-semibold text-sm">Material de Planejamento (Onboarding)</h3>
+        <FileUploader 
+          label="Material de Planejamento (Onboarding)"
+          currentUrl={portalForm.onboardingPdfUrl}
+          onUploadSuccess={(url) => setPortalForm(f => ({ ...f, onboardingPdfUrl: url }))}
+        />
         <div>
-          <label className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">
-            Link do Calendário/Estratégia (Google Drive / Canva)
+          <label className="text-[10px] text-muted-foreground uppercase tracking-widest block mb-1">
+            Ou cole um link externo (Canva, Google Drive)
           </label>
           <input
             type="url"
             value={portalForm.onboardingPdfUrl}
             onChange={(e) => setPortalForm((f) => ({ ...f, onboardingPdfUrl: e.target.value }))}
             placeholder="https://canva.com/..."
-            className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 mb-1"
+            className="w-full bg-muted/30 border border-border rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary/50"
           />
-          <p className="text-xs text-muted-foreground">
-            Este link será exibido no Portal do Cliente ao lado das etapas de onboarding.
-          </p>
         </div>
       </div>
 
@@ -202,17 +227,23 @@ const PortalTab = ({ company, companyId }: { company: Company; companyId: string
       <div className="glass-card p-5 space-y-4">
         <h3 className="font-semibold text-sm">Informações de Contrato & Pagamento</h3>
         <div className="space-y-3">
-          <div>
-            <label className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">
-              Link do PDF do Contrato (Google Drive / Canva)
-            </label>
-            <input
-              type="url"
-              value={portalForm.contractPdfUrl}
-              onChange={(e) => setPortalForm((f) => ({ ...f, contractPdfUrl: e.target.value }))}
-              placeholder="https://..."
-              className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 mb-3"
+            <FileUploader 
+              label="Documento do Contrato"
+              currentUrl={portalForm.contractPdfUrl}
+              onUploadSuccess={(url) => setPortalForm(f => ({ ...f, contractPdfUrl: url }))}
             />
+            <div className="mt-2 mb-4">
+              <label className="text-[10px] text-muted-foreground uppercase tracking-widest block mb-1">
+                Link do Contrato (Opcional)
+              </label>
+              <input
+                type="url"
+                value={portalForm.contractPdfUrl}
+                onChange={(e) => setPortalForm((f) => ({ ...f, contractPdfUrl: e.target.value }))}
+                placeholder="https://..."
+                className="w-full bg-muted/30 border border-border rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary/50"
+              />
+            </div>
             <label className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">
               Observações do Contrato
             </label>
@@ -223,7 +254,6 @@ const PortalTab = ({ company, companyId }: { company: Company; companyId: string
               rows={3}
               className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 resize-none"
             />
-          </div>
           <div>
             <label className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">
               Dia de Vencimento
@@ -347,6 +377,15 @@ const ClientDetailPage = () => {
     setSavingChecklist(null);
   };
 
+  const updateCompanyMutation = useMutation({
+    mutationFn: (data: Partial<Company>) => api.put(`/companies/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['company', id] });
+      toast.success('Empresa atualizada!');
+    },
+    onError: () => toast.error('Erro ao atualizar empresa'),
+  });
+
   if (isLoading) return (
     <div className="animate-fade-in">
       <AppHeader title="Cliente" />
@@ -356,6 +395,13 @@ const ClientDetailPage = () => {
     </div>
   );
 
+  const getFullUrl = (url: string) => {
+    if (!url) return '';
+    if (url.startsWith('http')) return url;
+    const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+    return apiBase.replace('/api', '') + url;
+  };
+
   return (
     <div className="animate-fade-in">
       <AppHeader title={company?.name || 'Cliente'} />
@@ -364,13 +410,32 @@ const ClientDetailPage = () => {
           {/* Left - Company Info */}
           <div className="space-y-4">
             <div className="glass-card p-5 space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-xl gradient-primary flex items-center justify-center">
-                  <Building2 className="h-6 w-6 text-primary-foreground" />
+              <div className="flex items-center gap-4">
+                <div className="relative group">
+                  <div className="h-16 w-16 rounded-2xl border-2 border-dashed border-muted-foreground/20 flex items-center justify-center overflow-hidden bg-muted/30">
+                    {company?.avatar ? (
+                      <img src={getFullUrl(company.avatar)} alt={company.name} className="h-full w-full object-cover" />
+                    ) : (
+                      <Building2 className="h-8 w-8 text-muted-foreground/40" />
+                    )}
+                    
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
+                      <FileUploader
+                        onUploadSuccess={(url) => {
+                          updateCompanyMutation.mutate({ avatar: url });
+                        }}
+                        label=""
+                        accept="image/*"
+                        variant="avatar"
+                      />
+                    </div>
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 bg-primary text-primary-foreground p-1 rounded-lg shadow-lg">
+                    <Camera className="h-3 w-3" />
+                  </div>
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg">{company?.name}</h3>
-                  <p className="text-xs text-muted-foreground">{company?.cnpj}</p>
                 </div>
               </div>
               <div className="space-y-2 text-sm">

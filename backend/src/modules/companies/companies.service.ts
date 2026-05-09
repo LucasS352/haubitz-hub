@@ -169,6 +169,7 @@ export const companiesService = {
         ...(data.onboardingPdfUrl !== undefined && { onboardingPdfUrl: data.onboardingPdfUrl }),
         ...(data.contractPdfUrl !== undefined && { contractPdfUrl: data.contractPdfUrl }),
         ...(data.paymentDay !== undefined && { paymentDay: data.paymentDay }),
+        ...(data.avatar !== undefined && { avatar: data.avatar }),
       },
       select: COMPANY_SELECT,
     });
@@ -228,6 +229,7 @@ export const companiesService = {
         ...(data.onboardingPdfUrl !== undefined && { onboardingPdfUrl: data.onboardingPdfUrl }),
         ...(data.contractPdfUrl !== undefined && { contractPdfUrl: data.contractPdfUrl }),
         ...(data.paymentDay !== undefined && { paymentDay: data.paymentDay }),
+        ...(data.avatar !== undefined && { avatar: data.avatar }),
       },
       select: {
         id: true,
@@ -245,6 +247,7 @@ export const companiesService = {
         onboardingPdfUrl: true,
         contractPdfUrl: true,
         paymentDay: true,
+        avatar: true,
       },
     });
   },

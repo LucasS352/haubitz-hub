@@ -2,13 +2,28 @@ import ModalShell from './ModalShell'
 
 interface Props {
   info: string
+  paymentDay?: number
   onClose: () => void
 }
 
-export default function PagamentosModal({ info, onClose }: Props) {
+export default function PagamentosModal({ info, paymentDay, onClose }: Props) {
   return (
     <ModalShell title="Pagamentos" onClose={onClose}>
       <div className="space-y-4">
+        {paymentDay && (
+          <div className="glass p-4 border border-brand-500/20 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-brand-500/10 flex items-center justify-center text-brand-400 font-bold">
+                {paymentDay}
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-white">Vencimento Fixo</p>
+                <p className="text-xs text-white/50">Todo dia {paymentDay} de cada mês</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {info ? (
           <div className="glass p-4 text-sm text-white/80 whitespace-pre-wrap leading-relaxed min-h-[120px]">
             {info}

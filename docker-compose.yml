@@ -12,16 +12,16 @@ services:
     container_name: haubitz_db
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: HaubitzRoot2024
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-HaubitzRoot2024}
       MYSQL_DATABASE: haubitz
       MYSQL_USER: haubitz_user
-      MYSQL_PASSWORD: HaubitzDB2024
+      MYSQL_PASSWORD: ${DB_PASSWORD:-HaubitzDB2024}
     volumes:
       - haubitz_db_data:/var/lib/mysql
     networks:
       - haubitz_network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pHaubitzRoot2024"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-HaubitzRoot2024}"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -41,15 +41,15 @@ services:
       - "3540:3000"
     environment:
       NODE_ENV: production
-      DATABASE_URL: mysql://haubitz_user:HaubitzDB2024@db:3306/haubitz
-      JWT_SECRET: haubitz-jwt-secret-2024-change-this-in-prod
-      JWT_REFRESH_SECRET: haubitz-refresh-secret-2024-change-this-in-prod
+      DATABASE_URL: mysql://haubitz_user:${DB_PASSWORD:-HaubitzDB2024}@db:3306/haubitz
+      JWT_SECRET: ${JWT_SECRET:-haubitz-jwt-secret-2024-change-this-in-prod}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-haubitz-refresh-secret-2024-change-this-in-prod}
       JWT_EXPIRES_IN: 15m
       JWT_REFRESH_EXPIRES_IN: 7d
       BCRYPT_ROUNDS: 12
-      ADMIN_EMAIL: kayke@haubitz.com.br
-      ADMIN_PASSWORD: Haubitz@2024!
-      ADMIN_NAME: Kayke
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-kayke@haubitz.com.br}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Haubitz@2024!}
+      ADMIN_NAME: ${ADMIN_NAME:-Kayke}
     volumes:
       - haubitz_uploads:/app/public/uploads
     depends_on:

@@ -21,6 +21,7 @@ export const createUserSchema = z.object({
     errorMap: () => ({ message: 'Role inválido. Use: ADMIN, SDR, CLOSER ou COLLABORATOR' }),
   }),
   companyId: z.string().uuid('ID da empresa inválido').optional().nullable(),
+  avatar: z.string().optional().nullable(),
 });
 
 export const updateUserSchema = z.object({
@@ -29,6 +30,7 @@ export const updateUserSchema = z.object({
   role: z.enum(['ADMIN', 'SDR', 'CLOSER', 'COLLABORATOR']).optional(),
   companyId: z.string().uuid().optional().nullable(),
   isActive: z.boolean().optional(),
+  avatar: z.string().optional().nullable(),
 });
 
 export const updatePermissionsSchema = z.object({

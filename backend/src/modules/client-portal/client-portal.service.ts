@@ -23,9 +23,12 @@ const PORTAL_SELECT = {
   // Contrato e pagamento
   contratoInfo: true,
   pagamentosInfo: true,
+  contractPdfUrl: true,
+  paymentDay: true,
   // Token Meta
   metaAccessToken: true,
   // Onboarding resumido
+  onboardingPdfUrl: true,
   onboarding: {
     select: {
       id: true,

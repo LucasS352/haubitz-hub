@@ -53,6 +53,7 @@ export const usersController = {
       const user = await usersService.update(
         req.params.id,
         data,
+        req.user!.id,
         req.user!.companyId,
         req.user!.isSuperAdmin
       );

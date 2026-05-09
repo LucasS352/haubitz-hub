@@ -11,8 +11,13 @@ export default function QuickActions({ onOpenContrato, onOpenPagamentos, payment
   if (paymentDay) {
     const today = new Date();
     const currentDay = today.getDate();
-    const diff = paymentDay - currentDay;
     
+    // Calcula a diferença considerando o ciclo mensal
+    // Se hoje é dia 28 e vence dia 2, faltam 4 ou 5 dias (dependendo do mês)
+    let diff = paymentDay - currentDay;
+    
+    // Se a diferença for negativa, o vencimento já passou este mês ou é para o próximo
+    // Vamos considerar "atrasado" se passou do dia até 5 dias atrás
     if (diff === 0) {
       paymentStatus = 'late';
       paymentTooltip = 'Vencimento hoje!';
@@ -22,6 +27,11 @@ export default function QuickActions({ onOpenContrato, onOpenPagamentos, payment
     } else if (diff > 0 && diff <= 3) {
       paymentStatus = 'warning';
       paymentTooltip = `Vencimento em ${diff} dia${diff > 1 ? 's' : ''}`;
+    } else if (diff < -5) {
+      // Se passou muito tempo, provavelmente estamos esperando o vencimento do PRÓXIMO mês
+      // Não mostramos alerta ainda.
+      paymentStatus = 'normal';
+      paymentTooltip = `Vencimento todo dia ${paymentDay}`;
     }
   }
 

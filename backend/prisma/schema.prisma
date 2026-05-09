@@ -80,6 +80,7 @@ model User {
   // null = SuperAdmin (acesso a todas as empresas)
   companyId    String?   @map("company_id")
   isActive     Boolean   @default(true) @map("is_active")
+  avatar       String?   // URL da foto de perfil
   lastLoginAt  DateTime? @map("last_login_at")
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
