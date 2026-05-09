@@ -43,9 +43,12 @@ RUN npm install --only=production
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma/engines ./node_modules/@prisma/engines
+# Copia a pasta public para servir arquivos estáticos e uploads locais
+COPY --from=builder /app/public ./public
 
 # Cria usuário não-root e ajusta permissões
 RUN addgroup -S haubitz && adduser -S haubitz -G haubitz \
+    && mkdir -p /app/public/uploads \
     && chown -R haubitz:haubitz /app
 
 USER haubitz
@@ -58,4 +61,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD wget -qO- http://localhost:3000/health || exit 1
 
 # Roda migrations → seed (cria admin se não existir) → inicia servidor
-CMD ["sh", "-c", "npx prisma migrate deploy && node prisma/seed.js && node dist/index.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/prisma/seed.js && node dist/src/index.js"]

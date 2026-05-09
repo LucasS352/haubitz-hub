@@ -12,7 +12,8 @@ RUN npm install
 
 # Copia o código e compila
 COPY . .
-RUN npm run build
+# Garante um build limpo e com limite de memória estendido para evitar exit code 2
+RUN rm -rf dist && NODE_OPTIONS="--max-old-space-size=4096" npm run build
 
 # =============================================
 # PRODUCTION STAGE (NGINX)

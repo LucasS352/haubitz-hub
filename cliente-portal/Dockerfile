@@ -9,7 +9,8 @@ COPY package*.json ./
 RUN npm install
 
 COPY . .
-RUN npm run build
+# Build limpo e com memória expandida
+RUN rm -rf dist && NODE_OPTIONS="--max-old-space-size=4096" npm run build
 
 # =============================================
 # PRODUCTION STAGE (NGINX)
