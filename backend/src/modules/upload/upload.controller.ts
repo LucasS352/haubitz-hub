@@ -52,8 +52,14 @@ export const uploadController = {
         return next(new BadRequestError('Nenhum arquivo enviado'));
       }
 
+      // Garante que o arquivo recém-criado seja legível pelo Nginx (chmod 644)
+      try {
+        fs.chmodSync(req.file.path, '0644');
+      } catch (e) {
+        console.log('Aviso: Não foi possível ajustar permissão do arquivo:', req.file.filename);
+      }
+
       // Constrói a URL pública
-      // Em produção, isso pode precisar ser ajustado dependendo de proxy reverso
       const fileUrl = `/uploads/${req.file.filename}`;
 
       res.status(200).json(success({ url: fileUrl }, 'Arquivo enviado com sucesso'));
