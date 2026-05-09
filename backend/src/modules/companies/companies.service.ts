@@ -234,7 +234,6 @@ export const companiesService = {
         ...(data.avatar !== undefined && { avatar: data.avatar }),
         ...(data.trafegoPagoOrcamento !== undefined && { 
           trafegoPagoOrcamento: data.trafegoPagoOrcamento,
-          trafficBudgetUpdatedAt: new Date()
         }),
       },
       select: {
@@ -255,7 +254,8 @@ export const companiesService = {
         paymentDay: true,
         avatar: true,
         trafegoPagoOrcamento: true,
-        trafficBudgetUpdatedAt: true,
+        trafficBudgetStartAt: true,
+        trafficBudgetEndAt: true,
       },
     });
   },
