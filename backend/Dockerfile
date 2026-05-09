@@ -8,21 +8,21 @@ WORKDIR /app
 # Instala OpenSSL necessário para o Prisma
 RUN apk add --no-cache openssl
 
-# Copia apenas os arquivos de dependências primeiro (cache otimizado)
+# Copia pacotes e prisma schema primeiro para cache de instalação
 COPY package*.json ./
 COPY prisma ./prisma/
 
-# Instala TODAS as dependências (incluindo devDependencies para build)
+# Instala todas as dependências
 RUN npm install
 
 # Copia o restante do código
 COPY . .
 
-# Gera o Prisma Client
-RUN npx prisma generate
+# Gera o Prisma Client (usa o binário local instalado)
+RUN ./node_modules/.bin/prisma generate
 
-# Compila TypeScript
-RUN npm run build
+# Compila TypeScript com memória otimizada
+RUN NODE_OPTIONS="--max-old-space-size=4096" npm run build
 
 # =============================================
 # PRODUCTION STAGE
@@ -60,5 +60,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD wget -qO- http://localhost:3000/health || exit 1
 
-# Roda migrations → seed (cria admin se não existir) → inicia servidor
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/prisma/seed.js && node dist/src/index.js"]
+# Roda migrations → seed → inicia servidor
+CMD ["sh", "-c", "./node_modules/.bin/prisma migrate deploy && node dist/prisma/seed.js && node dist/src/index.js"]
