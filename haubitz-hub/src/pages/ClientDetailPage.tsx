@@ -67,6 +67,7 @@ const PortalTab = ({ company, companyId }: { company: Company; companyId: string
     onboardingPdfUrl: company.onboardingPdfUrl ?? '',
     contractPdfUrl: company.contractPdfUrl ?? '',
     paymentDay: company.paymentDay ?? '',
+    trafegoPagoOrcamento: company.trafegoPagoOrcamento ?? '',
   });
 
   const savePortalMutation = useMutation({
@@ -78,6 +79,7 @@ const PortalTab = ({ company, companyId }: { company: Company; companyId: string
         roi: data.roi !== '' ? Number(data.roi) : undefined,
         metaAccessToken: data.metaAccessToken || undefined,
         paymentDay: data.paymentDay !== '' ? Number(data.paymentDay) : undefined,
+        trafegoPagoOrcamento: data.trafegoPagoOrcamento !== '' ? Number(data.trafegoPagoOrcamento) : undefined,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['company', companyId] });
@@ -197,6 +199,44 @@ const PortalTab = ({ company, companyId }: { company: Company; companyId: string
               />
             </div>
           ))}
+        </div>
+      </div>
+      
+      {/* Orçamento de Tráfego Pago */}
+      <div className="glass-card p-5 space-y-4 border-l-4 border-primary">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold text-sm">Orçamento de Tráfego Pago</h3>
+          <StatusBadge status={company.trafegoPagoOrcamento ? 'ACTIVE' : 'NOT_STARTED'} />
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">Valor (R$)</label>
+            <input
+              type="number"
+              value={portalForm.trafegoPagoOrcamento}
+              onChange={(e) => setPortalForm((f) => ({ ...f, trafegoPagoOrcamento: e.target.value }))}
+              placeholder="0.00"
+              className="w-full bg-muted/50 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50"
+            />
+          </div>
+          
+          <div className="md:col-span-2 bg-primary/5 border border-primary/10 rounded-lg p-3 flex flex-col justify-center">
+            <p className="text-[10px] text-primary uppercase font-bold tracking-widest mb-1">Período definido pelo cliente</p>
+            {company.trafficBudgetStartAt && company.trafficBudgetEndAt ? (
+              <p className="text-sm font-medium">
+                {new Date(company.trafficBudgetStartAt).toLocaleDateString('pt-BR')}
+                {' → '}
+                {new Date(company.trafficBudgetEndAt).toLocaleDateString('pt-BR')}
+              </p>
+            ) : company.trafficBudgetStartAt ? (
+              <p className="text-sm font-medium">
+                Início: {new Date(company.trafficBudgetStartAt).toLocaleDateString('pt-BR')}
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground">Aguardando definição do cliente</p>
+            )}
+          </div>
         </div>
       </div>
 

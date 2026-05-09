@@ -4,18 +4,53 @@ import ModalShell from './ModalShell'
 
 interface Props {
   current: number
+  currentStartDate?: string
+  currentEndDate?: string
   onClose: () => void
-  onSave: (value: number) => void
+  onSave: (value: number, startDate: string, endDate: string) => void
 }
 
 const MIN = 7
 
-export default function TrafegoPagoModal({ current, onClose, onSave }: Props) {
-  const [value, setValue] = useState(current > 0 ? String(current) : '')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+// Date → YYYY-MM-DD para input[type=date]
+const toInputDate = (d: Date | string) => {
+  const date = typeof d === 'string' ? new Date(d) : d
+  return date.toISOString().split('T')[0]
+}
+
+// YYYY-MM-DD → DD/MM
+const formatShort = (iso: string) => {
+  if (!iso) return ''
+  const [, m, day] = iso.split('-')
+  return `${day}/${m}`
+}
+
+// Adiciona N dias a string YYYY-MM-DD
+const addDays = (iso: string, days: number): string => {
+  if (!iso) return ''
+  const d = new Date(iso + 'T12:00:00')
+  d.setDate(d.getDate() + days)
+  return toInputDate(d)
+}
+
+export default function TrafegoPagoModal({ current, currentStartDate, currentEndDate, onClose, onSave }: Props) {
+  const defaultStart = currentStartDate ? toInputDate(currentStartDate) : toInputDate(new Date())
+  const defaultEnd   = currentEndDate   ? toInputDate(currentEndDate)   : addDays(defaultStart, 30)
+
+  const [value,     setValue]     = useState(current > 0 ? String(current) : '')
+  const [startDate, setStartDate] = useState(defaultStart)
+  const [endDate,   setEndDate]   = useState(defaultEnd)
+  const [loading,   setLoading]   = useState(false)
+  const [error,     setError]     = useState('')
 
   const numVal = parseFloat(value.replace(',', '.')) || 0
+
+  // Quando muda início, auto-ajusta o fim para início + 30 (mas permite edição manual)
+  const handleStartChange = (val: string) => {
+    setStartDate(val)
+    setEndDate(addDays(val, 30))
+    setError('')
+  }
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -23,40 +58,47 @@ export default function TrafegoPagoModal({ current, onClose, onSave }: Props) {
       setError(`O valor mínimo é R$ ${MIN},00`)
       return
     }
+    if (!startDate || !endDate) {
+      setError('Informe as datas de início e fim do período.')
+      return
+    }
+    if (endDate <= startDate) {
+      setError('A data fim deve ser após a data de início.')
+      return
+    }
 
     setLoading(true)
     setError('')
     try {
-      await api.put('/portal/trafego-pago', { orcamento: numVal })
-      onSave(numVal)
+      const startIso = new Date(startDate + 'T12:00:00').toISOString()
+      const endIso   = new Date(endDate   + 'T12:00:00').toISOString()
+      await api.put('/portal/trafego-pago', { orcamento: numVal, startDate: startIso, endDate: endIso })
+      onSave(numVal, startIso, endIso)
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Erro ao salvar. Tente novamente.')
       setLoading(false)
     }
   }
 
-  const today = new Date();
-  const nextMonth = new Date(today);
-  nextMonth.setDate(today.getDate() + 30);
-  const formatDate = (d: Date) => d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-
   return (
     <ModalShell title="Tráfego Pago" onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-5">
-        <div className="bg-brand-500/10 border border-brand-500/20 rounded-xl p-4 text-sm text-white/70 space-y-2">
-          <p>Defina o valor mensal que você deseja investir em anúncios pagos.</p>
+
+        {/* Info */}
+        <div className="bg-brand-500/10 border border-brand-500/20 rounded-xl p-4 text-sm text-white/70 space-y-1.5">
+          <p>Defina o valor que você deseja investir em anúncios pagos.</p>
           <p className="text-white/80">
-            Ajustaremos o orçamento em até 2 horas, o valor abaixo será trabalhado por 30 dias.
+            Ajustaremos o orçamento em até 2 horas.
           </p>
-          <p className="text-xs text-white/60">
-            Hoje é {formatDate(today)}, esse orçamento será trabalhado até <strong>{formatDate(nextMonth)}</strong>.
+          <p className="text-xs text-white/40 pt-1">
+            Valor mínimo: <span className="text-white font-medium">R$ 7,00</span>
           </p>
-          <p className="text-xs text-white/40 pt-1">Valor mínimo: <span className="text-white font-medium">R$ 7,00</span></p>
         </div>
 
+        {/* Valor */}
         <div>
           <label className="block text-xs text-white/50 uppercase tracking-widest font-medium mb-2">
-            Orçamento mensal (R$)
+            Orçamento (R$)
           </label>
           <div className="relative">
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 font-semibold">R$</span>
@@ -91,6 +133,46 @@ export default function TrafegoPagoModal({ current, onClose, onSave }: Props) {
           </div>
         </div>
 
+        {/* Período: Início + Fim */}
+        <div>
+          <label className="block text-xs text-white/50 uppercase tracking-widest font-medium mb-2">
+            Período de Veiculação
+          </label>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <p className="text-[10px] text-white/40 mb-1">Data de início</p>
+              <input
+                id="input-trafego-inicio"
+                type="date"
+                value={startDate}
+                onChange={(e) => handleStartChange(e.target.value)}
+                className="portal-input w-full text-sm"
+                style={{ colorScheme: 'dark' }}
+              />
+            </div>
+            <div>
+              <p className="text-[10px] text-white/40 mb-1">Data fim</p>
+              <input
+                id="input-trafego-fim"
+                type="date"
+                value={endDate}
+                onChange={(e) => { setEndDate(e.target.value); setError('') }}
+                className="portal-input w-full text-sm"
+                style={{ colorScheme: 'dark' }}
+              />
+            </div>
+          </div>
+
+          {startDate && endDate && endDate > startDate && (
+            <p className="text-xs text-white/40 mt-2 text-center">
+              📅 <span className="text-white/60 font-medium">{formatShort(startDate)}</span>
+              {' '}→{' '}
+              <span className="text-white/60 font-medium">{formatShort(endDate)}</span>
+            </p>
+          )}
+        </div>
+
         {error && (
           <p className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">
             {error}
@@ -102,7 +184,7 @@ export default function TrafegoPagoModal({ current, onClose, onSave }: Props) {
           <button
             id="btn-salvar-trafego"
             type="submit"
-            disabled={loading || numVal < MIN}
+            disabled={loading || numVal < MIN || !startDate || !endDate}
             className="btn-primary flex-1"
           >
             {loading ? 'Salvando...' : 'Confirmar'}

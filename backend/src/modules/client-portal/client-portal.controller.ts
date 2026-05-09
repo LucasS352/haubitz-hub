@@ -44,8 +44,17 @@ export const clientPortalController = {
    */
   async updateTrafegoPago(req: PortalRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { orcamento } = req.body as { orcamento: number };
-      const result = await clientPortalService.updateTrafegoPago(req.portalCompanyId!, Number(orcamento));
+      const { orcamento, startDate, endDate } = req.body as { 
+        orcamento: number; 
+        startDate?: string; 
+        endDate?: string; 
+      };
+      const result = await clientPortalService.updateTrafegoPago(
+        req.portalCompanyId!, 
+        Number(orcamento), 
+        startDate, 
+        endDate
+      );
       res.json(success(result, 'Orçamento de tráfego pago atualizado'));
     } catch (err) {
       next(err);

@@ -14,6 +14,8 @@ export interface PortalCompany {
 
   // Tráfego pago
   trafegoPagoOrcamento?: number | string
+  trafficBudgetStartAt?: string // data de início do ciclo escolhida pelo cliente
+  trafficBudgetEndAt?: string   // data fim do ciclo escolhida pelo cliente
 
   // Redes sociais
   instagramUrl?: string

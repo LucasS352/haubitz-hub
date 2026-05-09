@@ -211,6 +211,7 @@ export const companiesService = {
     contractPdfUrl?: string;
     paymentDay?: number;
     avatar?: string;
+    trafegoPagoOrcamento?: number;
   }) {
     const company = await prisma.company.findUnique({ where: { id } });
     if (!company) throw new NotFoundError('Empresa não encontrada');
@@ -231,6 +232,10 @@ export const companiesService = {
         ...(data.contractPdfUrl !== undefined && { contractPdfUrl: data.contractPdfUrl }),
         ...(data.paymentDay !== undefined && { paymentDay: data.paymentDay }),
         ...(data.avatar !== undefined && { avatar: data.avatar }),
+        ...(data.trafegoPagoOrcamento !== undefined && { 
+          trafegoPagoOrcamento: data.trafegoPagoOrcamento,
+          trafficBudgetUpdatedAt: new Date()
+        }),
       },
       select: {
         id: true,
@@ -249,6 +254,8 @@ export const companiesService = {
         contractPdfUrl: true,
         paymentDay: true,
         avatar: true,
+        trafegoPagoOrcamento: true,
+        trafficBudgetUpdatedAt: true,
       },
     });
   },

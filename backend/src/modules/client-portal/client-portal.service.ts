@@ -16,6 +16,8 @@ const PORTAL_SELECT = {
   roi: true,
   // Tráfego pago
   trafegoPagoOrcamento: true,
+  trafficBudgetStartAt: true,
+  trafficBudgetEndAt: true,
   // Redes sociais
   instagramUrl: true,
   facebookUrl: true,
@@ -88,16 +90,29 @@ export const clientPortalService = {
   /**
    * Atualiza o orçamento de tráfego pago do cliente.
    * Valor mínimo: R$ 7,00.
+   * startDate e endDate: período escolhido pelo cliente.
    */
-  async updateTrafegoPago(companyId: string, orcamento: number) {
+  async updateTrafegoPago(companyId: string, orcamento: number, startDate?: string, endDate?: string) {
     if (orcamento < 7) {
       throw new ValidationError('O valor mínimo para tráfego pago é R$ 7,00');
     }
 
+    const budgetStart = startDate ? new Date(startDate) : new Date();
+    const budgetEnd   = endDate   ? new Date(endDate)   : null;
+
     return prisma.company.update({
       where: { id: companyId },
-      data: { trafegoPagoOrcamento: orcamento },
-      select: { id: true, trafegoPagoOrcamento: true },
+      data: { 
+        trafegoPagoOrcamento: orcamento,
+        trafficBudgetStartAt: budgetStart,
+        trafficBudgetEndAt:   budgetEnd ?? undefined,
+      },
+      select: {
+        id: true,
+        trafegoPagoOrcamento: true,
+        trafficBudgetStartAt: true,
+        trafficBudgetEndAt: true,
+      },
     });
   },
 

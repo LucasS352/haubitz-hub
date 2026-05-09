@@ -9,9 +9,15 @@ import { BadRequestError } from '../../utils/errors';
 // Configurar o destino local para os uploads
 const uploadDir = path.join(process.cwd(), 'public/uploads');
 
-// Garante que o diretório exista
+// Garante que o diretório exista e tenha as permissões certas para o Docker
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
+}
+// Forçar permissão de leitura para o Nginx conseguir servir as imagens
+try {
+  fs.chmodSync(uploadDir, '0755');
+} catch (e) {
+  console.log('Aviso: Não foi possível mudar permissão da pasta de uploads');
 }
 
 const storage = multer.diskStorage({

@@ -167,7 +167,9 @@ model Company {
   roi                Float?    @map("roi") // ex: 25.0 = 25x
 
   // Orçamento de tráfego pago definido pelo cliente (mínimo R$ 7)
-  trafegoPagoOrcamento Decimal? @map("trafego_pago_orcamento") @db.Decimal(14, 2)
+  trafegoPagoOrcamento   Decimal?  @map("trafego_pago_orcamento") @db.Decimal(14, 2)
+  trafficBudgetStartAt   DateTime? @map("traffic_budget_start_at")
+  trafficBudgetEndAt     DateTime? @map("traffic_budget_end_at")
 
   // Redes sociais do cliente (usadas no tráfego pago)
   instagramUrl String? @map("instagram_url")

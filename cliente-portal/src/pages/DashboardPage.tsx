@@ -219,9 +219,16 @@ export default function DashboardPage({ company, onCompanyUpdate, onLogout }: Pr
       {modal === 'trafego' && (
         <TrafegoPagoModal
           current={Number(company.trafegoPagoOrcamento) || 0}
+          currentStartDate={company.trafficBudgetStartAt}
+          currentEndDate={company.trafficBudgetEndAt}
           onClose={() => setModal(null)}
-          onSave={(val) => {
-            const updated = { ...company, trafegoPagoOrcamento: val }
+          onSave={(val, startDate, endDate) => {
+            const updated = { 
+              ...company, 
+              trafegoPagoOrcamento: val,
+              trafficBudgetStartAt: startDate,
+              trafficBudgetEndAt: endDate,
+            }
             onCompanyUpdate(updated)
             localStorage.setItem('portal_company', JSON.stringify(updated))
             setModal(null)

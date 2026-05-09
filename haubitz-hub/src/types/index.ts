@@ -103,6 +103,8 @@ export interface Company {
   onboardingPdfUrl?: string;
   contractPdfUrl?: string;
   paymentDay?: number;
+  trafficBudgetStartAt?: string;
+  trafficBudgetEndAt?: string;
 }
 
 export type PipelineStage =
