@@ -210,6 +210,7 @@ export const companiesService = {
     onboardingPdfUrl?: string;
     contractPdfUrl?: string;
     paymentDay?: number;
+    avatar?: string;
   }) {
     const company = await prisma.company.findUnique({ where: { id } });
     if (!company) throw new NotFoundError('Empresa não encontrada');
