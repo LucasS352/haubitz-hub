@@ -130,7 +130,10 @@ export const FileUploader = ({
                 <FileText className="h-5 w-5" />
               </a>
               <button
-                onClick={() => onUploadSuccess('')}
+                onClick={() => {
+                  onUploadSuccess('');
+                  toast.info('Arquivo removido. Clique em "Salvar Alterações" no fim da página para confirmar a exclusão.', { duration: 4000 });
+                }}
                 className="p-2 rounded-full bg-red-500/20 hover:bg-red-500/40 text-red-400 transition-colors"
                 title="Remover"
               >

@@ -118,7 +118,40 @@ const PortalTab = ({ company, companyId }: { company: Company; companyId: string
   const portalUrl = `${window.location.origin.replace('5173', '5174')}`;
 
   const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text).then(() => toast.success(`${label} copiado!`));
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text)
+        .then(() => toast.success(`${label} copiado!`))
+        .catch(() => fallbackCopyTextToClipboard(text, label));
+    } else {
+      fallbackCopyTextToClipboard(text, label);
+    }
+  };
+
+  const fallbackCopyTextToClipboard = (text: string, label: string) => {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    // Evita scroll para o textarea
+    textArea.style.top = "0";
+    textArea.style.left = "0";
+    textArea.style.position = "fixed";
+    textArea.style.opacity = "0";
+    
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+
+    try {
+      const successful = document.execCommand('copy');
+      if (successful) {
+        toast.success(`${label} copiado!`);
+      } else {
+        toast.error('Não foi possível copiar');
+      }
+    } catch (err) {
+      toast.error('Não foi possível copiar');
+    }
+    
+    document.body.removeChild(textArea);
   };
 
   return (
