@@ -7,12 +7,19 @@ interface Props {
 }
 
 export default function ContratoModal({ info, pdfUrl, onClose }: Props) {
+  const getFullUrl = (url: string) => {
+    if (!url) return '';
+    if (url.startsWith('http')) return url;
+    const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+    return apiBase.replace('/api', '') + url;
+  };
+
   return (
     <ModalShell title="Meu Contrato" onClose={onClose}>
       <div className="space-y-4">
         {pdfUrl && (
           <a
-            href={pdfUrl}
+            href={getFullUrl(pdfUrl)}
             target="_blank"
             rel="noopener noreferrer"
             className="w-full glass border border-brand-500/30 hover:border-brand-500/60 transition-all p-4 flex items-center justify-between group no-underline"

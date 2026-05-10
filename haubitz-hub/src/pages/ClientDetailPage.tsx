@@ -29,7 +29,7 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FileUploader } from '@/components/FileUploader';
 import type { Company, OnboardingStep } from '@/types';
 
@@ -53,7 +53,6 @@ const StepIcon = ({ status }: { status: string }) => {
 const PortalTab = ({ company, companyId }: { company: Company; companyId: string }) => {
   const queryClient = useQueryClient();
 
-  // Estado do formulário do portal
   const [portalForm, setPortalForm] = useState({
     investimento: company.investimento ?? '',
     faturamento: company.faturamento ?? '',
@@ -69,6 +68,24 @@ const PortalTab = ({ company, companyId }: { company: Company; companyId: string
     paymentDay: company.paymentDay ?? '',
     trafegoPagoOrcamento: company.trafegoPagoOrcamento ?? '',
   });
+
+  useEffect(() => {
+    setPortalForm({
+      investimento: company.investimento ?? '',
+      faturamento: company.faturamento ?? '',
+      roi: company.roi ?? '',
+      instagramUrl: company.instagramUrl ?? '',
+      facebookUrl: company.facebookUrl ?? '',
+      tiktokUrl: company.tiktokUrl ?? '',
+      contratoInfo: company.contratoInfo ?? '',
+      pagamentosInfo: company.pagamentosInfo ?? '',
+      metaAccessToken: company.metaAccessToken ?? '',
+      onboardingPdfUrl: company.onboardingPdfUrl ?? '',
+      contractPdfUrl: company.contractPdfUrl ?? '',
+      paymentDay: company.paymentDay ?? '',
+      trafegoPagoOrcamento: company.trafegoPagoOrcamento ?? '',
+    });
+  }, [company]);
 
   const savePortalMutation = useMutation({
     mutationFn: (data: typeof portalForm) =>

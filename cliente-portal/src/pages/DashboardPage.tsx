@@ -267,7 +267,7 @@ export default function DashboardPage({ company, onCompanyUpdate, onLogout }: Pr
               </div>
               <div className="flex items-center gap-2">
                 <a 
-                  href={company.onboardingPdfUrl} 
+                  href={getFullUrl(company.onboardingPdfUrl!)} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition-all"
@@ -291,13 +291,13 @@ export default function DashboardPage({ company, onCompanyUpdate, onLogout }: Pr
             <div className="flex-1 overflow-auto bg-black/40 min-h-[400px] flex items-center justify-center p-2">
               {/\.(jpg|jpeg|png|webp|gif|svg)$/i.test(company.onboardingPdfUrl!) ? (
                 <img 
-                  src={company.onboardingPdfUrl} 
+                  src={getFullUrl(company.onboardingPdfUrl!)} 
                   alt="Planejamento" 
                   className="max-w-full h-auto object-contain shadow-2xl rounded-lg"
                 />
               ) : (
                 <iframe 
-                  src={formatEmbedUrl(company.onboardingPdfUrl!)} 
+                  src={getFullUrl(formatEmbedUrl(company.onboardingPdfUrl!))} 
                   className="w-full h-full min-h-[60vh] border-0 rounded-lg"
                   allowFullScreen
                   title="Planejamento"
