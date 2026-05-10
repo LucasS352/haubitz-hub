@@ -77,7 +77,8 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Servir arquivos estáticos da pasta uploads
-app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
+// IMPORTANTE: usa process.cwd() (=/app) e não __dirname (=/app/dist/src) para o path correto em produção
+app.use('/uploads', express.static(path.join(process.cwd(), 'public/uploads')));
 
 // Logging de requisições (desabilitado em testes)
 if (env.NODE_ENV !== 'test') {
